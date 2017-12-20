@@ -4,8 +4,6 @@ import {sortBy} from 'lodash';
 
 import PostListItem from '../Components/PostListItem';
 
-// const posts = require('../posts.json');
-
 export default class PostList extends React.PureComponent {
 
   constructor(props) {
