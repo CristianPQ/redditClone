@@ -40,50 +40,45 @@ export default class PostList extends React.PureComponent {
   }
 
   _filter(mode) {
-    console.log(mode);
     let currentFilterMode = this.state.currentFilterMode + 1;
     if(currentFilterMode >= this.state.filterModes.length) currentFilterMode = 0;
-
     let nextMode = this.state.filterModes[currentFilterMode];
+
     this.props.navigation.setParams({
-      mode: nextMode,
-      filter: this._filter
+      mode: nextMode
     });
 
-    let posts = this.state.posts;
-    let comp = () => null;
-    switch(mode) {
-      case 'New':
-        // posts = sortBy(posts, [(elem) => {
-        //   console.log(elem);
-        //   return elem.data.created_utc}]);
-        break;
-      case 'Top':
-        // posts = sortBy(posts, [(elem) => (elem.data.score)]);
-        break;
-      case 'Hot':
-        // posts = sortBy(posts, [(elem) => (elem.data.num_comments)]);
-        break;
-      case 'Controversial':
-        break;
-      default:
-        break;
-    }
     this.setState({
-      currentFilterMode,
-      posts
-    })
+      currentFilterMode
+    }, () => (this._refreshPosts()))
   }
 
   _requestPosts() {
     return fetch('https://api.reddit.com/r/pics/new.json')
       .then(resp => resp.json())
       .then(posts => {
+        posts = posts.data.children;
+        let filterMode = this.state.currentFilterMode;
+
+        switch(filterMode) {
+          case 0: // new
+            posts = sortBy(posts, (elem) => (-elem.data.created_utc));
+            break;
+          case 1: // top
+            posts = sortBy(posts, [(elem) => (-elem.data.score)]);
+            break;
+          case 2: // hot
+            posts = sortBy(posts, [(elem) => (-elem.data.num_comments)]);
+            break;
+          case 3: // controversial
+            break;
+          default:
+        }
         this.setState({
           isLoading: false,
           isRefreshing: false,
           posts: posts || []
-        })
+        });
       })
       .catch(err => {
         console.error(err);
@@ -113,7 +108,7 @@ export default class PostList extends React.PureComponent {
       );
     }
 
-    let postList = this.state.posts.data.children;
+    let postList = this.state.posts ;
     return (
       <FlatList
         data={postList}
